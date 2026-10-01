@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Search Engine</title>
+    <meta name="description" content="A powerful hybrid search engine using BM25 and Semantic Vectors">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="background-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <main class="container">
+        <header>
+            <h1>Hybrid <span class="gradient-text">Search</span></h1>
+            <p>Powered by Qdrant & Reciprocal Rank Fusion</p>
+        </header>
+
+        <section class="search-section glass-panel">
+            <form id="search-form" class="search-form" onsubmit="event.preventDefault();">
+                <div class="search-input-group">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="search-input" placeholder="Search knowledge base..." autocomplete="off" required>
+                    <button type="submit" class="primary-btn">Search</button>
+                </div>
+                
+
+            </form>
+        </section>
+
+        <div class="main-content">
+            <section class="results-section">
+                <div class="results-header">
+                    <h2>Search Results</h2>
+                    <span id="results-count" class="badge">0 found</span>
+                </div>
+                <div id="results-container" class="results-container">
+                    <div class="empty-state">
+                        <div class="empty-icon">🔍</div>
+                        <p>Enter a query to start searching the knowledge base.</p>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="sidebar">
+                <section class="ingest-section glass-panel">
+                    <h2>Ingest Document</h2>
+                    <form id="ingest-form" class="ingest-form" onsubmit="event.preventDefault();">
+                        <div class="form-group">
+                            <label for="doc-file">Select File</label>
+                            <input type="file" id="doc-file" required accept=".txt,.md,.csv,.json,.log,.pdf">
+                        </div>
+                        <button type="submit" class="secondary-btn" id="ingest-btn">
+                            <span>Upload to Index</span>
+                            <div class="loader hidden"></div>
+                        </button>
+                    </form>
+                    <div id="ingest-status" class="status-message"></div>
+                </section>
+                
+                <section class="health-section glass-panel">
+                    <h2>System Health</h2>
+                    <div id="health-stats" class="health-stats">
+                        <div class="stat-row"><span>Status:</span> <span class="status-indicator">●</span></div>
+                        <div class="stat-row"><span>Indexed Chunks:</span> <span id="chunk-count">...</span></div>
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

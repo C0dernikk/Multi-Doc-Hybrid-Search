@@ -3,82 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hybrid Search Engine</title>
-    <meta name="description" content="A powerful hybrid search engine using BM25 and Semantic Vectors">
+    <title>Hybrid Search Engine | Neural & Lexical</title>
+    <meta name="description" content="State-of-the-art hybrid search engine powered by Qdrant vector retrieval, BM25 lexical search, and Cross-Encoder neural reranking">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=3">
 </head>
 <body>
-    <div class="background-orbs">
+    <!-- Interactive Particle Canvas Background -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Ambient Glowing Gradient Orbs -->
+    <div class="background-orbs" aria-hidden="true">
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
     </div>
 
+    <!-- Futuristic Grid Overlay -->
+    <div class="grid-overlay" aria-hidden="true"></div>
+
     <main class="container">
+        <!-- Header -->
         <header>
-            <h1>Hybrid <span class="gradient-text">Search</span></h1>
-            <p>Powered by Qdrant & Reciprocal Rank Fusion</p>
+            <div class="brand-pill">
+                <span class="pulsing-beacon"></span>
+                <span class="brand-text">Multi-Modal Retrieval Pipeline</span>
+                <span class="pill-divider">/</span>
+                <span class="pill-highlight">v2.0 Active</span>
+            </div>
+            <h1>Hybrid <span class="gradient-text">Search</span> Engine</h1>
+            <p>Dense Neural Embeddings &bull; BM25 Lexical Scoring &bull; Cross-Encoder Re-Ranking</p>
         </header>
 
+        <!-- Search Controls & Input Section -->
         <section class="search-section glass-panel">
-            <form id="search-form" class="search-form" onsubmit="event.preventDefault();">
+            <!-- Mode Switcher Tabs -->
+            <div class="mode-tabs-wrapper">
+                <div class="mode-tabs" id="mode-tabs">
+                    <button type="button" class="mode-tab active" data-mode="hybrid">
+                        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                        </svg>
+                        <span>Hybrid (RRF + Reranker)</span>
+                    </button>
+                    <button type="button" class="mode-tab" data-mode="vector">
+                        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 3a9 9 0 0 0 0 18"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <span>Neural Vector</span>
+                    </button>
+                    <button type="button" class="mode-tab" data-mode="keyword">
+                        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 7V4h16v3M9 20h6M12 4v16"></path>
+                        </svg>
+                        <span>BM25 Keyword</span>
+                    </button>
+                </div>
+
+                <!-- Top K Selector -->
+                <div class="topk-selector">
+                    <label for="top-k-select">Top</label>
+                    <select id="top-k-select">
+                        <option value="3">3</option>
+                        <option value="5" selected>5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Search Form -->
+            <form id="search-form" class="search-form">
                 <div class="search-input-group">
                     <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
-                    <input type="text" id="search-input" placeholder="Search knowledge base..." autocomplete="off" required>
-                    <button type="submit" class="primary-btn">Search</button>
+                    <input type="text" id="search-input" placeholder="Search across indexed documents, contracts, specs..." autocomplete="off" required>
+                    <button type="button" id="clear-search" class="clear-btn hidden" title="Clear search">&times;</button>
+                    <button type="submit" class="primary-btn" id="search-btn">
+                        <span>Search</span>
+                        <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
                 </div>
-                
-
             </form>
+
+            <!-- Quick Suggestions Chips -->
+            <div class="suggestions-row">
+                <span class="suggestion-label">Suggested:</span>
+                <div class="suggestion-chips" id="suggestion-chips">
+                    <button type="button" class="chip">IT Business Automation</button>
+                    <button type="button" class="chip">Python web framework</button>
+                    <button type="button" class="chip">Mock Sandbox Environment</button>
+                    <button type="button" class="chip">Engineering bottlenecks</button>
+                </div>
+            </div>
+
+            <!-- Telemetry / Latency Bar (dynamically populated) -->
+            <div id="telemetry-bar" class="telemetry-bar hidden">
+                <div class="telemetry-header">
+                    <div class="telemetry-title">
+                        <span class="telemetry-icon">⚡</span>
+                        <span>Pipeline Telemetry</span>
+                    </div>
+                    <span id="telemetry-total" class="telemetry-total">0 ms</span>
+                </div>
+                <div class="telemetry-breakdown">
+                    <div class="telemetry-chip" id="t-bm25">BM25: <span>0ms</span></div>
+                    <div class="telemetry-chip" id="t-dense">Dense: <span>0ms</span></div>
+                    <div class="telemetry-chip" id="t-rrf">RRF Merge: <span>0ms</span></div>
+                    <div class="telemetry-chip" id="t-rerank">Cross-Encoder: <span>0ms</span></div>
+                </div>
+                <div class="telemetry-meter">
+                    <div class="meter-segment seg-bm25" id="meter-bm25" style="width: 0%" title="BM25"></div>
+                    <div class="meter-segment seg-dense" id="meter-dense" style="width: 0%" title="Dense Retrieval"></div>
+                    <div class="meter-segment seg-rrf" id="meter-rrf" style="width: 0%" title="RRF Merge"></div>
+                    <div class="meter-segment seg-rerank" id="meter-rerank" style="width: 0%" title="Reranker"></div>
+                </div>
+            </div>
         </section>
 
+        <!-- Main Content Area: Results & Sidebar -->
         <div class="main-content">
+            <!-- Results Section -->
             <section class="results-section">
                 <div class="results-header">
-                    <h2>Search Results</h2>
+                    <div class="results-title-group">
+                        <h2>Search Results</h2>
+                        <span id="search-query-echo" class="query-echo hidden"></span>
+                    </div>
                     <span id="results-count" class="badge">0 found</span>
                 </div>
                 <div id="results-container" class="results-container">
                     <div class="empty-state">
-                        <div class="empty-icon">🔍</div>
-                        <p>Enter a query to start searching the knowledge base.</p>
+                        <div class="empty-icon-wrapper">
+                            <div class="empty-icon-glow"></div>
+                            <span class="empty-icon">🔍</span>
+                        </div>
+                        <h3>Ready to Search</h3>
+                        <p>Type a query or pick a suggestion above to retrieve and re-rank matches.</p>
                     </div>
                 </div>
             </section>
 
+            <!-- Sidebar -->
             <aside class="sidebar">
+                <!-- Document Ingestion Card -->
                 <section class="ingest-section glass-panel">
-                    <h2>Ingest Document</h2>
-                    <form id="ingest-form" class="ingest-form" onsubmit="event.preventDefault();">
-                        <div class="form-group">
-                            <label for="doc-file">Select File</label>
-                            <input type="file" id="doc-file" required accept=".txt,.md,.csv,.json,.log,.pdf">
+                    <div class="section-heading">
+                        <svg class="heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <h2>Ingest Document</h2>
+                    </div>
+
+                    <form id="ingest-form" class="ingest-form">
+                        <!-- Drag & Drop Zone -->
+                        <div class="drop-zone" id="drop-zone">
+                            <input type="file" id="doc-file" class="file-input" required accept=".txt,.md,.csv,.json,.log,.pdf">
+                            <div class="drop-zone-content">
+                                <div class="upload-icon-wrapper">
+                                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                                        <line x1="9" y1="15" x2="12" y2="12"></line>
+                                        <line x1="15" y1="15" x2="12" y2="12"></line>
+                                    </svg>
+                                </div>
+                                <span class="drop-title">Drag & drop your file</span>
+                                <span class="drop-sub">PDF, TXT, MD, CSV, JSON (up to 50MB)</span>
+                            </div>
                         </div>
+
+                        <!-- Selected File Preview -->
+                        <div id="file-preview" class="file-preview hidden">
+                            <div class="file-info">
+                                <span class="file-icon">📄</span>
+                                <div class="file-details">
+                                    <span id="file-name" class="file-name">filename.pdf</span>
+                                    <span id="file-size" class="file-size">0 KB</span>
+                                </div>
+                            </div>
+                            <button type="button" id="remove-file" class="remove-file-btn" title="Remove">&times;</button>
+                        </div>
+
                         <button type="submit" class="secondary-btn" id="ingest-btn">
-                            <span>Upload to Index</span>
+                            <span class="btn-text">Upload & Index</span>
                             <div class="loader hidden"></div>
                         </button>
                     </form>
                     <div id="ingest-status" class="status-message"></div>
                 </section>
-                
+
+                <!-- System Health Panel -->
                 <section class="health-section glass-panel">
-                    <h2>System Health</h2>
-                    <div id="health-stats" class="health-stats">
-                        <div class="stat-row"><span>Status:</span> <span class="status-indicator">●</span></div>
-                        <div class="stat-row"><span>Indexed Chunks:</span> <span id="chunk-count">...</span></div>
+                    <div class="section-heading">
+                        <svg class="heading-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                        </svg>
+                        <h2>System Topology</h2>
+                    </div>
+
+                    <div class="health-stats">
+                        <div class="stat-card">
+                            <div class="stat-label">Vector Store</div>
+                            <div class="stat-value-group">
+                                <span class="status-indicator" id="qdrant-indicator">●</span>
+                                <span class="stat-val-text" id="qdrant-status-text">Qdrant Active</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-label">BM25 Lexical</div>
+                            <div class="stat-value-group">
+                                <span class="status-indicator" id="bm25-indicator">●</span>
+                                <span class="stat-val-text" id="bm25-status-text">Ready</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card highlight">
+                            <div class="stat-label">Indexed Chunks</div>
+                            <div class="stat-number-wrapper">
+                                <span id="chunk-count" class="counter-val">0</span>
+                                <span class="stat-unit">chunks</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="model-meta">
+                        <div class="meta-row">
+                            <span class="meta-label">Dense:</span>
+                            <span class="meta-val">all-MiniLM-L6-v2</span>
+                        </div>
+                        <div class="meta-row">
+                            <span class="meta-label">Reranker:</span>
+                            <span class="meta-val">ms-marco-MiniLM-L-6-v2</span>
+                        </div>
                     </div>
                 </section>
             </aside>
         </div>
     </main>
 
-    <script src="/static/app.js"></script>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="/static/app.js?v=3"></script>
 </body>
 </html>

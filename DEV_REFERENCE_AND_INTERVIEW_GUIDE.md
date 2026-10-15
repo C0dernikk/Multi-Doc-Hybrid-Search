@@ -25,7 +25,10 @@ Handles the heavy lifting of data processing and database interactions.
 - **`reranker.py`**: The `Reranker` singleton class. Loads the Cross-Encoder model (`cross-encoder/ms-marco-MiniLM-L-6-v2`) and performs secondary reranking of fused candidates. Implements a thread pool executor with a configurable timeout for graceful degradation under heavy load.
 
 ### `/frontend` Directory
-- Contains static assets (`index.html`, etc.) for the web UI.
+Contains the modern, glassmorphic client interface served directly by FastAPI.
+- **`index.html`**: The single-page interface with an interactive HTML5 particle canvas background, search mode selector tabs (`hybrid`, `vector`, `keyword`), quick prompt chips, real-time pipeline telemetry dashboard, drag-and-drop file upload area, system health monitors, and structured search results.
+- **`style.css`**: Advanced dark-mode design system with glassmorphic cards (`backdrop-filter: blur(16px)`), animated floating nebula gradient orbs, a cyber dot-matrix grid overlay, glowing focus rings, responsive layouts, and dynamic match badge styling.
+- **`app.js`**: Frontend logic orchestrating the 60 FPS interactive particle constellation canvas (with mouse attraction physics), search mode dispatching, Sigmoid-based score-to-percentage calibration ($\sigma(z) = \frac{1}{1 + e^{-z}}$), multi-stage latency telemetry rendering, drag-and-drop ingestion with file size formatting, one-click chunk clipboard copying, and animated count-up health metrics.
 
 ### `/scripts` Directory
 - **`benchmark.py`**: An asynchronous load-testing script using `httpx`. It generates 1,000 synthetic chunks, pushes them to the ingest endpoint, and then executes 100 sequential and 50 concurrent search queries, outputting detailed P95/P99 latency metrics.
@@ -189,3 +192,16 @@ It is dumped into a `results/benchmark_report.json` file using Python's `json.du
 
 **50. What is a synthetic chunk in the benchmark?**
 It's randomly generated text constructed from a list of keywords to simulate data ingestion without needing an external dataset dependency.
+
+### Frontend, Telemetry & Score Calibration
+**51. Why does the Cross-Encoder output raw logits, and how are they calibrated into a percentage?**
+The Cross-Encoder (`ms-marco-MiniLM-L-6-v2`) is trained as a binary classifier using cross-entropy loss, outputting unbounded log-odds logits $z \in (-\infty, +\infty)$ (e.g. `7.5331`). In the client, we apply the logistic Sigmoid function $\sigma(z) = \frac{1}{1 + e^{-z}}$, which maps arbitrary logits directly into calibrated, probabilistic relevance percentages ($0\%$ to $100\%$).
+
+**52. How does the pipeline measure and expose stage-by-stage latencies?**
+`execute_search_with_latencies()` and `main.py` capture `time.time()` checkpoints around the BM25 query, Qdrant vector retrieval, RRF fusion, and Cross-Encoder reranking. These are packaged into the Pydantic `SearchLatencies` schema and returned with the results, enabling the client to render real-time pipeline telemetry.
+
+**53. How do the three search modes differ in pipeline execution?**
+- **Keyword (`BM25`)**: Runs purely through `rank-bm25` in memory, bypassing neural embeddings and Qdrant.
+- **Vector (`Neural`)**: Computes query embeddings (cached via LRU) and queries Qdrant using cosine similarity, bypassing lexical token matching and Cross-Encoder reranking.
+- **Hybrid**: Executes both BM25 and Qdrant in first-stage retrieval, merges candidates using Reciprocal Rank Fusion ($k=60$), and executes second-stage neural reranking via the Cross-Encoder.
+
